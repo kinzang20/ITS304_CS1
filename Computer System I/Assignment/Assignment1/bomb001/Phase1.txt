@@ -1,0 +1,138 @@
+khotsa@KingWang7777:/mnt/c/Users/Lenovo/Desktop/12190062/Computer System I/bomb001$ bash
+khotsa@KingWang7777:/mnt/c/Users/Lenovo/Desktop/12190062/Computer System I/bomb001$ gdb bomb
+GNU gdb (Ubuntu 9.2-0ubuntu1~20.04) 9.2
+Copyright (C) 2020 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from bomb...
+
+//Set up the break point
+(gdb) b phase_1
+Breakpoint 1 at 0x400e8d
+(gdb) r
+Starting program: /mnt/c/Users/Lenovo/Desktop/12190062/Computer System I/bomb001/bomb
+Welcome to my fiendish little bomb. You have 6 phases with
+which to blow yourself up. Have a nice day!
+hi
+
+Breakpoint 1, 0x0000000000400e8d in phase_1 ()
+(gdb) disas
+Dump of assembler code for function phase_1:
+=> 0x0000000000400e8d <+0>:     sub    $0x8,%rsp    //we added stack frame 
+   0x0000000000400e91 <+4>:     mov    $0x4023d0,%esi //Memory is being moved.
+   0x0000000000400e96 <+9>:     callq  0x40133e <strings_not_equal>  //we will compare input string with answer.
+   0x0000000000400e9b <+14>:    test   %eax,%eax
+   0x0000000000400e9d <+16>:    je     0x400ea4 <phase_1+23>
+   0x0000000000400e9f <+18>:    callq  0x40143d <explode_bomb>
+   0x0000000000400ea4 <+23>:    add    $0x8,%rsp
+   0x0000000000400ea8 <+27>:    retq
+End of assembler dump.
+
+//we will check what is being moved from address 0x4023d0. we know that input should be string  where we used 's'.
+
+(gdb) x/s0x4023d0
+0x4023d0:       "The moon unit will be divided into two divisions."  // expected string output
+0x0000000000400e9b in phase_1 ()
+(gdb) i r   //To check information regester
+rax            0x1                 1   //we call the bomb 1&1 will not give back zero
+rbx            0x4021f0            4202992
+rcx            0x2                 2
+rdx            0x1                 1
+rsi            0x4023d0            4203472
+rdi            0x402401            4203521
+rbp            0x0                 0x0
+rsp            0x7ffffffee340      0x7ffffffee340
+r8             0x6037a0            6305696
+r9             0x7c                124
+r10            0xfffffffffffff6ed  -2323
+r11            0x7fffff5e7400      140737477768192
+r12            0x400c60            4197472
+r13            0x7ffffffee440      140737488282688
+r14            0x0                 0
+r15            0x0                 0
+rip            0x400e9b            0x400e9b <phase_1+14>
+eflags         0x287               [ CF PF SF IF ]
+cs             0x33                51
+ss             0x2b                43
+ds             0x0                 0
+es             0x0                 0
+fs             0x0                 0
+gs             0x0                 0
+
+
+(gdb) b phase_1
+Note: breakpoint 1 also set at pc 0x400e8d.
+Breakpoint 2 at 0x400e8d
+(gdb) r
+The program being debugged has been started already.
+Start it from the beginning? (y or n) y
+Starting program: /mnt/c/Users/Lenovo/Desktop/12190062/Computer System I/bomb001/bomb
+Welcome to my fiendish little bomb. You have 6 phases with
+which to blow yourself up. Have a nice day!
+The moon unit will be divided into two divisions. //Lets try using the string we found in the disassembler code and see the value of %eax for it.
+
+Breakpoint 1, 0x0000000000400e8d in phase_1 ()
+(gdb) disas
+Dump of assembler code for function phase_1:
+=> 0x0000000000400e8d <+0>:     sub    $0x8,%rsp
+   0x0000000000400e91 <+4>:     mov    $0x4023d0,%esi
+   0x0000000000400e96 <+9>:     callq  0x40133e <strings_not_equal>
+   0x0000000000400e9b <+14>:    test   %eax,%eax
+   0x0000000000400e9d <+16>:    je     0x400ea4 <phase_1+23>
+   0x0000000000400e9f <+18>:    callq  0x40143d <explode_bomb>
+   0x0000000000400ea4 <+23>:    add    $0x8,%rsp
+   0x0000000000400ea8 <+27>:    retq
+End of assembler dump.
+(gdb) ni 3 //we moved into next instruction line number 3
+0x0000000000400e9b in phase_1 ()
+(gdb) disas
+Dump of assembler code for function phase_1:
+   0x0000000000400e8d <+0>:     sub    $0x8,%rsp
+   0x0000000000400e91 <+4>:     mov    $0x4023d0,%esi
+   0x0000000000400e96 <+9>:     callq  0x40133e <strings_not_equal>
+=> 0x0000000000400e9b <+14>:    test   %eax,%eax  
+   0x0000000000400e9d <+16>:    je     0x400ea4 <phase_1+23>
+   0x0000000000400e9f <+18>:    callq  0x40143d <explode_bomb>
+   0x0000000000400ea4 <+23>:    add    $0x8,%rsp
+   0x0000000000400ea8 <+27>:    retq
+End of assembler dump.
+(gdb) i r
+rax            0x0                 0  //%rax is equal to 0! it will not explode but jump pass
+rbx            0x4021f0            4202992
+rcx            0x31                49
+rdx            0x0                 0
+rsi            0x4023d0            4203472
+rdi            0x402401            4203521
+rbp            0x0                 0x0
+rsp            0x7ffffffee340      0x7ffffffee340
+r8             0x6037a0            6305696
+r9             0x7c                124
+r10            0xfffffffffffff6ed  -2323
+r11            0x7fffff5e7400      140737477768192
+r12            0x400c60            4197472
+r13            0x7ffffffee440      140737488282688
+r14            0x0                 0
+r15            0x0                 0
+rip            0x400e9b            0x400e9b <phase_1+14>
+eflags         0x246               [ PF ZF IF ]
+cs             0x33                51
+ss             0x2b                43
+ds             0x0                 0
+es             0x0                 0
+fs             0x0                 0
+gs             0x0                 0
+(gdb) u*0x0000000000400ea8 //To check whether phsase_1 is dedused or not, we have to copy the address until last memoey address.
+main (argc=<optimized out>, argv=<optimized out>) at bomb.c:75
+75          phase_defused();                 /* Drat!  They figured it out!
+(gdb)
